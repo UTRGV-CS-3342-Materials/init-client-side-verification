@@ -21,10 +21,10 @@ function send(res, element) {
 
 // only rules: author not blank, content not blank
 function validateReview(values) {
-	const errors = [];
+	const errors = {};
 	// trim removes whitespace, blank string evaluates to false
-	if (!values.author.trim()) errors.push('Name cannot be blank.');
-	if (!values.content.trim()) errors.push('Review cannot be blank.');
+	if (!values.author.trim()) errors.author = true;
+	if (!values.content.trim()) errors.content = true;
 	return errors;
 }
 
@@ -60,7 +60,7 @@ app.post('/item_view/:item_id', (req, res) => {
 	};
 	const errors = validateReview(values);
 
-	if (errors.length > 0) {
+	if (Object.keys(errors).length > 0) {
 		// rerender the page to show errors, persist values
 		const reviews = db.prepare('SELECT * FROM review WHERE item_id = ?').all(itemId);
 		send(res, <ItemView item={item} reviews={reviews} values={values} errors={errors} />);

@@ -14,6 +14,7 @@ function Review({ review }) {
 }
 
 export function ItemView({ item, reviews, values, errors }) {
+	console.log(errors);
 	return (
 		<Layout title="Incredibly Simple Shopping">
 			<div className="pb-2 mt-4 mb-2 border-bottom">
@@ -45,25 +46,14 @@ export function ItemView({ item, reviews, values, errors }) {
 								<div className="form-group">
 									<label>Add your review!</label>
 
-									{/* V0: only added when there are errors to show */}
-									{errors && errors.length > 0 &&
-										<div className="alert alert-danger">
-											<p>Unable to save your review. Please correct these errors and resubmit.</p>
-											<ul>
-											{errors.map((msg,i) =>
-												<li key={i}>{msg}</li>)}
-											</ul>
-										</div>}
-
-									{/* V1: always added so that the client can show/hide errors */}
-									{/* <div id="error-banner" className="alert alert-danger">
+									{/* always rendered so the ids exist for client-side blur checks; hidden via inline style when there's nothing to show */}
+									<div className="alert alert-danger" style={{ display: errors && Object.keys(errors).length > 0 ? 'block' : 'none' }}>
 										<p>Unable to save your review. Please correct these errors and resubmit.</p>
-										<ul id="error-list">
-											<li id="error-author">Name cannot be blank</li>
-											<li id="error-content">Review cannot be blank</li>
+										<ul>
+											<li style={{ display: errors?.author ? 'list-item' : 'none' }}>Name cannot be blank</li>
+											<li style={{ display: errors?.content ? 'list-item' : 'none' }}>Review cannot be blank</li>
 										</ul>
-									</div> */}
-
+									</div>
 
 									{/* defaultValue rather than value here to set the initial content of the textbox 
 										? operator is a null check, same as values && values.author */}
@@ -90,6 +80,36 @@ export function ItemView({ item, reviews, values, errors }) {
 							</form>
 						</div>
 					</div>
+
+					{/* this page is rendered with renderToString and never hydrated, so React's onBlur prop
+						never reaches the browser (React drops it, and a literal onblur="" attribute gets
+						stripped from the SSR output too); wiring listeners by id from plain JS is what
+						actually runs client-side */}
+					<script
+						dangerouslySetInnerHTML={{
+							__html: `
+								// document.getElementById('author').addEventListener('blur', function () {
+								// 
+								// });
+
+								// var errorBanner = document.getElementById('error-banner');
+
+								// function show(errorId) {
+								// 	errorBanner.style.display = 'block';
+								// 	document.getElementById(errorId).style.display = 'list-item';
+								// }
+
+								// function hide(errorId) {							
+								// 	errorBanner.style.display = 'none';
+								// 	document.getElementById(errorId).style.display = 'none';
+								// }
+
+								// document.getElementById('content').addEventListener('blur', function () {
+								// 
+								// });
+							`,
+						}}
+					/>
 
 					{reviews.map((review) => (
 						<Review key={review.id} review={review} />
