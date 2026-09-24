@@ -47,11 +47,11 @@ export function ItemView({ item, reviews, values, errors }) {
 									<label>Add your review!</label>
 
 									{/* always rendered so the ids exist for client-side blur checks; hidden via inline style when there's nothing to show */}
-									<div className="alert alert-danger" style={{ display: errors && Object.keys(errors).length > 0 ? 'block' : 'none' }}>
+									<div id="error-banner" className="alert alert-danger" style={{ display: errors && Object.keys(errors).length > 0 ? 'block' : 'none' }}>
 										<p>Unable to save your review. Please correct these errors and resubmit.</p>
-										<ul>
-											<li style={{ display: errors?.author ? 'list-item' : 'none' }}>Name cannot be blank</li>
-											<li style={{ display: errors?.content ? 'list-item' : 'none' }}>Review cannot be blank</li>
+										<ul id="error-list">
+											<li id="error-author" style={{ display: errors?.author ? 'list-item' : 'none' }}>Name cannot be blank</li>
+											<li id="error-content" style={{ display: errors?.content ? 'list-item' : 'none' }}>Review cannot be blank</li>
 										</ul>
 									</div>
 
@@ -61,6 +61,7 @@ export function ItemView({ item, reviews, values, errors }) {
 										className="form-control mb-1"
 										placeholder="Name"
 										name="author"
+										id="author"
 										defaultValue={values?.author}
 									/>
 								</div>
@@ -69,6 +70,7 @@ export function ItemView({ item, reviews, values, errors }) {
 										className="form-control mb-1"
 										placeholder="Review"
 										name="content"
+										id="content"
 										defaultValue={values?.content}
 									/>
 								</div>
@@ -88,24 +90,76 @@ export function ItemView({ item, reviews, values, errors }) {
 					<script
 						dangerouslySetInnerHTML={{
 							__html: `
-								// document.getElementById('author').addEventListener('blur', function () {
-								// 
-								// });
+								var errorBanner = document.getElementById('error-banner');
 
-								// var errorBanner = document.getElementById('error-banner');
+								function show(errorId) {
+									errorBanner.style.display = 'block';
+									document.getElementById(errorId).style.display = 'list-item';
+								}
 
-								// function show(errorId) {
-								// 	errorBanner.style.display = 'block';
-								// 	document.getElementById(errorId).style.display = 'list-item';
+								function hide(errorId) {
+									document.getElementById(errorId).style.display = 'none';
+									errorBanner.style.display = 'none';
+								}
+
+								function checkBlank(textbox, errorId) {
+									if (textbox.value.trim() === '' ) {
+										show(errorId);
+									} else {
+										hide(errorId);
+									}
+								}
+
+								document.getElementById('author').addEventListener('blur', function () {
+									checkBlank(this, 'error-author');
+								});
+
+								document.getElementById('content').addEventListener('blur', function () {
+									checkBlank(this, 'error-content');
+								});
+
+								// function hasError() {
+								// 	return document.getElementById('error-author').style.display === 'list-item' ||
+								// 		document.getElementById('error-content').style.display === 'list-item';
 								// }
 
-								// function hide(errorId) {							
-								// 	errorBanner.style.display = 'none';
-								// 	document.getElementById(errorId).style.display = 'none';
-								// }
 
-								// document.getElementById('content').addEventListener('blur', function () {
-								// 
+								// intercept submit and post as JSON so the review can be added
+								// to the page without a full reload
+								// document.getElementById('review-form').addEventListener('submit', async function (event) {
+
+
+									// event.preventDefault();
+
+									// var authorBox = document.getElementById('author');
+									// var contentBox = document.getElementById('content');
+
+									// const response = await fetch('/api/item_view/${item.id}/reviews', {
+									// 	method: 'POST',
+									// 	headers: { 'Content-Type': 'application/json' },
+									// 	body: JSON.stringify({ author: authorBox.value, content: contentBox.value }),
+									// })
+	
+									// const body = await response.json();
+
+									// if (!response.ok) {
+									// 	if (body?.errors.author) show('error-author'); else hide('error-author');
+									// 	if (body?.errors.content) show('error-content'); else hide('error-content');
+									// 	return;
+									// }
+	
+									// hide('error-author');
+									// hide('error-content');
+
+									// const card = document.createElement('div');
+									// card.className = 'card w-100 mt-3';
+									// card.innerHTML =
+									// 	'<div class="card-header"><em>Someone</em></div>' +
+									// 	'<div class="card-body"><p>Something something</p></div>';
+									// document.getElementById('reviews-list').prepend(card);
+
+									// authorBox.value = '';
+									// contentBox.value = '';
 								// });
 							`,
 						}}

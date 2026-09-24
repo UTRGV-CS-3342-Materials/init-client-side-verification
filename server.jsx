@@ -7,12 +7,15 @@ import { ItemView } from './app/ItemView.jsx';
 
 const PORT = 8080;
 
+const FAKE_LATENCY_MS = 3000;
+
 // filepath relative to project root where we run the node server
 const db = new Database('shopping.sqlite');
 
 const app = express();
 app.use(express.static('static'));
 app.use(express.urlencoded({ extended: false }));
+// app.use((req, res, next) => setTimeout(next, FAKE_LATENCY_MS));
 
 // manually using react to generate HTML
 function send(res, element) {
@@ -76,5 +79,36 @@ app.post('/item_view/:item_id', (req, res) => {
 	// this matters if the user reloads or bookmarks the page
 	res.redirect(`/item_view/${itemId}`);
 });
+
+// API route for client-side add
+app.get('/api/item_view/:item_id/reviews', (req, res) => {
+	const itemId = parseInt(req.params.item_id);
+	const item = db.prepare('SELECT * FROM item WHERE id = ?').get(itemId);
+	if (!item) return res.status(404).json({ error: 'No such item.' });
+
+	const values = {
+		author: req.body.author ?? '',
+		content: req.body.content ?? ''
+	};
+
+	res.json({ author, content });
+
+
+	
+	// const errors = validateReview(values);
+
+	// if (Object.keys(errors).length > 0) {
+	// 	return res.status(422).json({ errors });
+	// }
+
+	// const author = values.author.trim();
+	// const content = values.content.trim();
+	// const { lastInsertRowid } = db.prepare(
+	// 	'INSERT INTO review (item_id, author, content) VALUES (?, ?, ?)',
+	// ).run(itemId, author, content);
+
+	// res.status(201).json({ review: { id: lastInsertRowid, item_id: itemId, author, content } });
+});
+
 
 app.listen(PORT, () => console.log(`http://localhost:${PORT}/items`));
